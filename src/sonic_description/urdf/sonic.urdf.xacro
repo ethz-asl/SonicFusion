@@ -1,0 +1,99 @@
+<?xml version="1.0"?>
+<robot name="sonic" xmlns:xacro="http://ros.org/wiki/xacro">
+
+  <xacro:include filename="$(find sonic_description)/urdf/materials.xacro" />
+  <xacro:include filename="$(find sonic_description)/urdf/omniwheel.xacro" />
+  <xacro:include filename="$(find sonic_description)/urdf/sonic.gazebo.xacro" />
+  <xacro:include filename="$(find sonic_description)/urdf/sonar_sensor.xacro" />
+
+  <!-- ARGUMENTS -->
+  <xacro:arg name="spawn" default="0.0 0.0 0.3" />
+
+  <!-- CONSTANTS -->
+  <xacro:property name="PI" value="3.1415926535897931" />
+  <xacro:property name="body_length" value="1.6" />
+  <xacro:property name="body_width" value="1" />
+  <xacro:property name="body_height" value="0.3" />
+  <xacro:property name="wheel_radius" value="0.16" />
+  <xacro:property name="wheel_width" value="${0.505/0.5*wheel_radius}" />
+
+  <!-- BASE -->
+  <link name="base_footprint"></link>
+
+  <joint name="base_link_joint" type="fixed">
+    <origin xyz="$(arg spawn)" rpy="0 0 0" />
+    <parent link="base_footprint"/>
+    <child link="base_link" />
+  </joint>
+
+  <link name="base_link">
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://sonic_description/meshes/sonic_base.stl" scale="0.1 0.1 0.1"/>
+      </geometry>
+      <material name="yellow" />
+    </visual>
+    <collision>
+      <origin xyz="0 0 0"/>
+      <geometry>
+        <mesh filename="package://sonic_description/meshes/sonic_base.stl" scale="0.1 0.1 0.1"/>
+      </geometry>
+    </collision>
+    <inertial>
+      <!-- Inertia from CAD model, filled box assumption -->
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <mass value="25"/>
+      <inertia
+        ixx="2.0" ixy="0" ixz="0"
+        iyy="2.0" iyz="0"
+        izz="2.0"/>
+    </inertial>
+  </link>
+
+  <!-- WHEELS -->
+  <xacro:meccanum_wheel name="upper_left_wheel" parent="base_link" 
+  origin="${[(body_length/2-body_length*0.254), (body_width/2-0.2), -0.04]}" wheel_type="left"/>
+  <xacro:meccanum_wheel name="upper_right_wheel" parent="base_link" 
+  origin="${[(body_length/2-body_length*0.254), -(body_width/2-0.2), -0.04]}" wheel_type="right"/>
+  <xacro:meccanum_wheel name="lower_left_wheel" parent="base_link" 
+  origin="${[-(body_length/2-body_length*0.254), (body_width/2-0.2), -0.04]}" wheel_type="right"/>
+  <xacro:meccanum_wheel name="lower_right_wheel" parent="base_link" 
+  origin="${[-(body_length/2-body_length*0.254), -(body_width/2-0.2), -0.04]}" wheel_type="left"/>
+
+
+  <!-- SENSORS FRONT (id=FXX) -->
+  <xacro:sonar_sensor id="F48" parent="base_link" 
+  origin="${[body_length/2, 0.24, 0]}" rpy="0 0 ${PI/9}"/>
+  <xacro:sonar_sensor id="F49" parent="base_link" 
+  origin="${[body_length/2, 0.12, 0]}" rpy="0 0 ${PI/18}"/>
+  <xacro:sonar_sensor id="F50" parent="base_link" 
+  origin="${[body_length/2, 0, 0]}" rpy="0 0 0"/>
+  <xacro:sonar_sensor id="F51" parent="base_link" 
+  origin="${[body_length/2, -0.12, 0]}" rpy="0 0 -${PI/18}"/>
+  <xacro:sonar_sensor id="F52" parent="base_link" 
+  origin="${[body_length/2, -0.24, 0]}" rpy="0 0 -${PI/9}"/>
+
+  <!-- SENSORS REAR(id=RXX) -->
+  <!--<xacro:sonar_sensor id="R48" parent="base_link" 
+  origin="${[-body_length/2, 0.24, 0]}" rpy="0 0 ${PI - PI/9}"/>
+  <xacro:sonar_sensor id="R49" parent="base_link" 
+  origin="${[-body_length/2, 0.12, 0]}" rpy="0 0 ${PI - PI/18}"/>
+  <xacro:sonar_sensor id="R50" parent="base_link" 
+  origin="${[-body_length/2, 0, 0]}" rpy="0 0 ${PI}"/>
+  <xacro:sonar_sensor id="R51" parent="base_link" 
+  origin="${[-body_length/2, -0.12, 0]}" rpy="0 0 ${PI + PI/18}"/>
+  <xacro:sonar_sensor id="R52" parent="base_link" 
+  origin="${[-body_length/2, -0.24, 0]}" rpy="0 0 ${PI + PI/9}"/>-->
+
+  <!-- SENSORS CHEEK (id=CXX) -->
+  <!--<xacro:sonar_sensor id="C52" parent="base_link" 
+  origin="${[-body_length/2+0.077, 0.42, 0]}" rpy="0 0 ${3*PI/4}"/>-->
+  <xacro:sonar_sensor id="C51" parent="base_link" 
+  origin="${[body_length/2-0.077, 0.42, 0]}" rpy="0 0 ${PI/4}"/>
+  <xacro:sonar_sensor id="C49" parent="base_link" 
+  origin="${[body_length/2-0.077, -0.42, 0]}" rpy="0 0 ${-PI/4}"/>
+  <!--<xacro:sonar_sensor id="C48" parent="base_link" 
+  origin="${[-body_length/2+0.077, -0.42, 0]}" rpy="0 0 ${-3*PI/4}"/>-->
+
+</robot>

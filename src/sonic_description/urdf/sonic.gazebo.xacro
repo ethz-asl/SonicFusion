@@ -1,0 +1,60 @@
+<?xml version="1.0"?>
+<robot name="sonic" xmlns:xacro="http://ros.org/wiki/xacro">
+  <gazebo reference="base_link">
+    <material>Gazebo/DarkGrey</material>
+  </gazebo>
+  
+  <gazebo reference="upper_left_wheel">
+    <material>Gazebo/White</material>
+  </gazebo>
+  <gazebo reference="upper_right_wheel">
+    <material>Gazebo/White</material>
+  </gazebo>
+  <gazebo reference="lower_left_wheel">
+    <material>Gazebo/White</material>
+  </gazebo>
+  <gazebo reference="lower_right_wheel">
+    <material>Gazebo/White</material>
+  </gazebo>
+  
+  <gazebo reference="upper_left_wheel_shaft">
+    <material>Gazebo/DarkGrey</material>
+  </gazebo>
+  <gazebo reference="upper_right_wheel_shaft">
+    <material>Gazebo/DarkGrey</material>
+  </gazebo>
+  <gazebo reference="lower_left_wheel_shaft">
+    <material>Gazebo/DarkGrey</material>
+  </gazebo>
+  <gazebo reference="lower_right_wheel_shaft">
+    <material>Gazebo/DarkGrey</material>
+  </gazebo>
+
+  <!-- PLUGINS -->
+  <gazebo>
+    <plugin name="omni_steering" filename="libgazebo_ros_planar_move.so">
+      <ros>
+        <!-- Add a namespace -->
+        <namespace>/sonic</namespace>
+        <!-- Remap the default topic -->
+        <remapping>cmd_vel:=cmd_vel</remapping>
+        <remapping>odom:=odom</remapping>
+      </ros>
+      <!-- Set control loop update rate -->
+      <update_rate>100</update_rate>
+      <!-- Set odom publish rate -->
+      <publish_rate>40</publish_rate>
+      <!-- Set if odom required -->
+      <publish_odom>false</publish_odom>
+      <publish_odom_tf>false</publish_odom_tf>
+      <!-- Frame IDs -->
+      <odometry_frame>base_footprint</odometry_frame>
+      <robot_base_frame>base_link</robot_base_frame>
+      <!-- Set odom covariance -->
+      <covariance_x>0.0</covariance_x>
+      <covariance_y>0.0</covariance_y>
+      <covariance_yaw>0.0</covariance_yaw>
+    </plugin>
+  </gazebo>
+  
+</robot>

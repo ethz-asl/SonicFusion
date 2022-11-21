@@ -1,0 +1,356 @@
+<?xml version="1.0"?>
+<robot name="sonic" xmlns:xacro="http://ros.org/wiki/xacro">
+
+  <xacro:include filename="$(find sonic_description)/urdf/materials.xacro" />
+
+  <xacro:property name="PI" value="3.1415926535897931" />
+
+  <xacro:property name="wheel_radius" value="0.050" />
+  <xacro:property name="wheel_width" value="0.0505" />
+
+  <link name="base_footprint"></link>
+
+  <joint name="base_link_joint" type="fixed">
+    <origin xyz="0 0 0.05" rpy="0 0 0" />
+    <parent link="base_footprint"/>
+    <child link="base_link" />
+  </joint>
+
+  <link name="base_link">
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://sonic_launch/meshes/nexus_base_link.STL" scale="0.001 0.001 0.001"/>
+      </geometry>
+      <material name="yellow" />
+    </visual>
+    <collision>
+      <origin xyz="0 0 0"/>
+      <geometry>
+        <mesh filename="package://sonic_launch/meshes/nexus_base_link_collision.STL" scale="0.001 0.001 0.001"/>
+      </geometry>
+    </collision>
+    <inertial>
+      <!-- Inertia from CAD model, filled box assumption -->
+      <origin xyz="-0.01103 0 0.002" rpy="0 0 0"/>
+      <mass value="2.844"/>
+      <inertia
+        ixx="0.018819942" ixy="0" ixz="-0.000101519"
+        iyy="0.057333716" iyz="0"
+        izz="0.074201740"/>
+    </inertial>
+  </link>
+
+  <joint name="upper_left_wheel_shaft_joint" type="fixed">
+    <origin xyz="0.150 0.108 0.0" rpy="0 0 0" />
+    <parent link="base_link"/>
+    <child link="upper_left_wheel_shaft" />
+  </joint>
+
+  <link name="upper_left_wheel_shaft">
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://sonic_launch/meshes/wheel_shaft.STL" scale="0.001 0.001 0.001"/>
+      </geometry>
+      <material name="black" />
+    </visual>
+    <collision>
+      <origin xyz="0 0 0"/>
+      <geometry>
+        <mesh filename="package://sonic_launch/meshes/wheel_shaft.STL" scale="0.001 0.001 0.001"/>
+      </geometry>
+    </collision>
+    <inertial>
+      <origin xyz="0 0.01221 0" rpy="0 0 0"/>
+      <mass value="0.055"/>
+      <inertia
+        ixx="0.000021370" ixy="0" ixz="0"
+        iyy="0.000009966" iyz="0"
+        izz="0.000021370"/>
+    </inertial>
+  </link>
+
+  <joint name="lower_left_wheel_shaft_joint" type="fixed">
+    <origin xyz="-0.150 0.108 0.0" rpy="0 0 0" />
+    <parent link="base_link"/>
+    <child link="lower_left_wheel_shaft" />
+  </joint>
+
+  <link name="lower_left_wheel_shaft">
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://sonic_launch/meshes/wheel_shaft.STL" scale="0.001 0.001 0.001"/>
+      </geometry>
+      <material name="black" />
+    </visual>
+    <collision>
+      <origin xyz="0 0 0"/>
+      <geometry>
+        <mesh filename="package://sonic_launch/meshes/wheel_shaft.STL" scale="0.001 0.001 0.001"/>
+      </geometry>
+    </collision>
+    <inertial>
+      <origin xyz="0 0.01221 0" rpy="0 0 0"/>
+      <mass value="0.055"/>
+      <inertia
+        ixx="0.000021370" ixy="0" ixz="0"
+        iyy="0.000009966" iyz="0"
+        izz="0.000021370"/>
+    </inertial>
+  </link>
+
+  <joint name="upper_right_wheel_shaft_joint" type="fixed">
+    <origin xyz="0.150 -0.108 0.0" rpy="${PI} 0 0" />
+    <parent link="base_link"/>
+    <child link="upper_right_wheel_shaft" />
+  </joint>
+
+  <link name="upper_right_wheel_shaft">
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://sonic_launch/meshes/wheel_shaft.STL" scale="0.001 0.001 0.001"/>
+      </geometry>
+      <material name="black" />
+    </visual>
+    <collision>
+      <origin xyz="0 0 0"/>
+      <geometry>
+        <mesh filename="package://sonic_launch/meshes/wheel_shaft.STL" scale="0.001 0.001 0.001"/>
+      </geometry>
+    </collision>
+    <inertial>
+      <origin xyz="0 0.01221 0" rpy="0 0 0"/>
+      <mass value="0.055"/>
+      <inertia
+        ixx="0.000021370" ixy="0" ixz="0"
+        iyy="0.000009966" iyz="0"
+        izz="0.000021370"/>
+    </inertial>
+  </link>
+
+  <joint name="lower_right_wheel_shaft_joint" type="fixed">
+    <origin xyz="-0.150 -0.108 0.0" rpy="${PI} 0 0" />
+    <parent link="base_link"/>
+    <child link="lower_right_wheel_shaft" />
+  </joint>
+
+  <link name="lower_right_wheel_shaft">
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://sonic_launch/meshes/wheel_shaft.STL" scale="0.001 0.001 0.001"/>
+      </geometry>
+      <material name="black" />
+    </visual>
+    <collision>
+      <origin xyz="0 0 0"/>
+      <geometry>
+        <mesh filename="package://sonic_launch/meshes/wheel_shaft.STL" scale="0.001 0.001 0.001"/>
+      </geometry>
+    </collision>
+    <inertial>
+      <origin xyz="0 0.01221 0" rpy="0 0 0"/>
+      <mass value="0.055"/>
+      <inertia
+        ixx="0.000021370" ixy="0" ixz="0"
+        iyy="0.000009966" iyz="0"
+        izz="0.000021370"/>
+    </inertial>
+  </link>
+
+  <joint name="upper_left_wheel_joint" type="continuous">
+    <origin xyz="0 0.042 0" rpy="0 0 0" />
+    <parent link="upper_left_wheel_shaft"/>
+    <child link="upper_left_wheel" />
+    <axis xyz="0 1 0"/>
+  </joint>
+  
+  <link name="upper_left_wheel">
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://sonic_launch/meshes/mecanum_wheel_left.STL" scale="0.001 0.001 0.001"/>
+      </geometry>
+      <material name="light_grey" />
+    </visual>
+    <collision>
+      <origin xyz="0 0 0" rpy="${PI/2} 0 0"/>
+      <geometry>
+        <cylinder radius="${wheel_radius}" length="${wheel_width}"/>
+      </geometry>
+    </collision>
+    <inertial>
+      <origin xyz="0.0 0.0 0.0" rpy="0 0 0"/>
+      <mass value="0.3844"/>
+      <!-- Inertia based on cylinder -->
+      <inertia
+        ixx="0.000324824" ixy="0" ixz="0"
+        iyy="0.000480000" iyz="0"
+        izz="0.000324824"/>
+    </inertial>
+  </link>
+
+  <joint name="lower_left_wheel_joint" type="continuous">
+    <origin xyz="0 0.042 0" rpy="0 0 0" />
+    <parent link="lower_left_wheel_shaft"/>
+    <child link="lower_left_wheel" />
+    <axis xyz="0 1 0"/>
+  </joint>
+
+  <link name="lower_left_wheel">
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://sonic_launch/meshes/mecanum_wheel_right.STL" scale="0.001 0.001 0.001"/>
+      </geometry>
+      <material name="light_grey" />
+    </visual>
+    <collision>
+      <origin xyz="0 0 0" rpy="${PI/2} 0 0"/>
+      <geometry>
+        <cylinder radius="${wheel_radius}" length="${wheel_width}"/>
+      </geometry>
+    </collision>
+    <inertial>
+      <origin xyz="0.0 0.0 0.0" rpy="0 0 0"/>
+      <mass value="0.3844"/>
+      <!-- Inertia based on cylinder -->
+      <inertia
+        ixx="0.000324824" ixy="0" ixz="0"
+        iyy="0.000480000" iyz="0"
+        izz="0.000324824"/>
+    </inertial>
+  </link>
+
+  <joint name="upper_right_wheel_joint" type="continuous">
+    <origin xyz="0 0.042 0" rpy="0 0 0" />
+    <parent link="upper_right_wheel_shaft"/>
+    <child link="upper_right_wheel" />
+    <axis xyz="0 1 0"/>
+  </joint>
+
+  <link name="upper_right_wheel">
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://sonic_launch/meshes/mecanum_wheel_right.STL" scale="0.001 0.001 0.001"/>
+      </geometry>
+      <material name="light_grey" />
+    </visual>
+    <collision>
+      <origin xyz="0 0 0" rpy="${PI/2} 0 0"/>
+      <geometry>
+        <cylinder radius="${wheel_radius}" length="${wheel_width}"/>
+      </geometry>
+    </collision>
+    <inertial>
+      <origin xyz="0.0 0.0 0.0" rpy="0 0 0"/>
+      <mass value="0.3844"/>
+      <!-- Inertia based on cylinder -->
+      <inertia
+        ixx="0.000324824" ixy="0" ixz="0"
+        iyy="0.000480000" iyz="0"
+        izz="0.000324824"/>
+    </inertial>
+  </link>
+  
+  <joint name="lower_right_wheel_joint" type="continuous">
+    <origin xyz="0 0.042 0" rpy="0 0 0" />
+    <parent link="lower_right_wheel_shaft"/>
+    <child link="lower_right_wheel" />
+    <axis xyz="0 1 0"/>
+  </joint>
+
+  <link name="lower_right_wheel">
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://sonic_launch/meshes/mecanum_wheel_left.STL" scale="0.001 0.001 0.001"/>
+      </geometry>
+      <material name="light_grey" />
+    </visual>
+    <collision>
+      <origin xyz="0 0 0" rpy="${PI/2} 0 0"/>
+      <geometry>
+        <cylinder radius="${wheel_radius}" length="${wheel_width}"/>
+      </geometry>
+    </collision>
+    <inertial>
+      <origin xyz="0.0 0.0 0.0" rpy="0 0 0"/>
+      <mass value="0.3844"/>
+      <!-- Inertia based on cylinder -->
+      <inertia
+        ixx="0.000324824" ixy="0" ixz="0"
+        iyy="0.000480000" iyz="0"
+        izz="0.000324824"/>
+    </inertial>
+  </link>
+
+  <joint name="left_sensor_joint" type="fixed">
+    <origin xyz="0 0.108 0.010" rpy="0 0 ${PI/2}" />
+    <parent link="base_link"/>
+    <child link="left_sensor" />
+  </joint>
+
+  <link name="left_sensor">
+    <visual>
+      <origin xyz="0 0 0" rpy="${PI/2} 0 0" />
+      <geometry>
+        <mesh filename="package://sonic_launch/meshes/urm04.STL" scale="0.001 0.001 0.001"/>
+      </geometry>
+      <material name="black" />
+    </visual>
+  </link>
+
+  <joint name="front_sensor_joint" type="fixed">
+    <origin xyz="0.205 0 0.010" rpy="0 0 0" />
+    <parent link="base_link"/>
+    <child link="front_sensor" />
+  </joint>
+
+  <link name="front_sensor">
+    <visual>
+      <origin xyz="0 0 0" rpy="${PI/2} 0 0" />
+      <geometry>
+        <mesh filename="package://sonic_launch/meshes/urm04.STL" scale="0.001 0.001 0.001"/>
+      </geometry>
+      <material name="black" />
+    </visual>
+  </link>
+
+  <joint name="right_sensor_joint" type="fixed">
+    <origin xyz="0 -0.108 0.010" rpy="0 0 ${-PI/2}" />
+    <parent link="base_link"/>
+    <child link="right_sensor" />
+  </joint>
+
+  <link name="right_sensor">
+    <visual>
+      <origin xyz="0 0 0" rpy="${PI/2} 0 0" />
+      <geometry>
+        <mesh filename="package://sonic_launch/meshes/urm04.STL" scale="0.001 0.001 0.001"/>
+      </geometry>
+      <material name="black" />
+    </visual>
+  </link>
+
+  <joint name="rear_sensor_joint" type="fixed">
+    <origin xyz="-0.201 0 0.010" rpy="0 0 ${PI}" />
+    <parent link="base_link"/>
+    <child link="rear_sensor" />
+  </joint>
+
+  <link name="rear_sensor">
+    <visual>
+      <origin xyz="0 0 0" rpy="${PI/2} 0 0" />
+      <geometry>
+        <mesh filename="package://sonic_launch/meshes/urm04.STL" scale="0.001 0.001 0.001"/>
+      </geometry>
+      <material name="black" />
+    </visual>
+  </link>
+
+</robot>

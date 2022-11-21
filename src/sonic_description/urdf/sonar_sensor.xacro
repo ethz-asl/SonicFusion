@@ -1,0 +1,87 @@
+<?xml version="1.0"?>
+
+<robot xmlns:xacro="http://ros.org/wiki/xacro">
+    <!-- MECCANUM WHEEL -->
+    <xacro:macro name="sonar_sensor" params="id parent origin rpy">
+
+    <!-- ULTRASONIC SENSORS -->
+    <joint name="sensor_joint_${id}" type="fixed">
+        <origin xyz="${origin[0]} ${origin[1]} ${origin[2]}" rpy="${rpy}" />
+        <parent link="${parent}"/>
+        <child link="uss_link_${id}" />
+    </joint>
+
+    <link name="uss_link_${id}">
+        <visual>
+        <origin xyz="0 0 0" rpy="0 ${PI/2} 0" />
+        <geometry>
+            <cylinder radius="0.02" length="0.015"/>
+        </geometry>
+        <material name="dark_grey" />
+        </visual>
+        <collision>
+        <origin xyz="0 0 0" rpy="0 ${PI/2} 0"/>
+        <geometry>
+            <cylinder radius="0.02" length="0.015"/>
+        </geometry>
+        </collision>
+        <inertial>
+        <!-- Inertia from CAD model, filled box assumption -->
+        <origin xyz="0 0 0" rpy="0 0 0"/>
+        <mass value="0.05"/>
+        <inertia
+            ixx="0.001" ixy="0" ixz="0"
+            iyy="0.001" iyz="0"
+            izz="0.001"/>
+        </inertial>
+    </link>
+
+    <!-- USS Plugin -->
+    <gazebo reference="uss_link_${id}">
+        <sensor type="ray" name="range_sensor_${id}">
+        <visualize>true</visualize>
+        <ray>
+            <scan>
+            <horizontal>
+                <samples>1</samples>
+                <resolution>45</resolution>
+                <min_angle>-0.6545</min_angle>
+                <max_angle>0.6545</max_angle>
+            </horizontal>
+            <vertical>
+                <samples>1</samples>
+                <resolution>15</resolution>
+                <min_angle>-0.04</min_angle>
+                <max_angle>0.04</max_angle>
+            </vertical>
+            </scan>
+            <range>
+                <min>0.15</min>
+                <max>4.1</max>
+                <resolution>0.01</resolution>
+            </range>
+            <!-- Using gazebo's noise instead of plugin's -->
+            <noise>
+                <type>gaussian</type>
+                <mean>0.0</mean>
+                <stddev>0.01</stddev>
+            </noise>
+        </ray>
+        <!-- Using gazebo's update rate instead of plugin's -->
+        <update_rate>10</update_rate>
+        <plugin name="range_sensor_${id}" filename="libgazebo_ros_ray_sensor.so">
+            <!-- Change namespace and output topic so published topic is /sonic/uss_id -->
+            <ros>
+            <namespace>/sonic</namespace>
+            <remapping>~/out:=uss_${id}</remapping>
+            </ros>
+            <!-- Set output to sensor_msgs/Range to get same output type as gazebo_ros_range -->
+            <output_type>sensor_msgs/Range</output_type>
+            <radiation_type>ultrasound</radiation_type>
+            <!-- <frame_name> ommited, will default to range_link -->
+        </plugin>
+        </sensor>
+    </gazebo>
+
+    </xacro:macro>
+</robot>

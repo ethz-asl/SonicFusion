@@ -1,0 +1,77 @@
+<?xml version="1.0"?>
+
+<robot xmlns:xacro="http://ros.org/wiki/xacro">
+    <!-- MECCANUM WHEEL -->
+    <xacro:macro name="meccanum_wheel" params="name parent origin wheel_type">
+
+    <xacro:property name="sign_direction" value="${-origin[1]/sqrt(origin[1]*origin[1])}" />
+    <xacro:property name="shaft_scale" value="${0.001*wheel_radius/0.05 - 0.001} ${0.001*wheel_radius/0.05 - 0.001} ${0.001*wheel_radius/0.05 - 0.001}" />
+    <xacro:property name="wheel_scale" value="${0.001*wheel_radius/0.05} ${0.001*wheel_radius/0.05} ${0.001*wheel_radius/0.05}" />
+
+    <joint name="${name}_shaft_joint" type="fixed">
+        <origin xyz="${origin[0]} ${origin[1]} ${origin[2]}" rpy="${sign_direction*PI/2} 0 0" />
+        <parent link="${parent}"/>
+        <child link="${name}_shaft" />
+    </joint>
+
+    <link name="${name}_shaft">
+        <visual>
+            <origin xyz="0 0 0" rpy="0 0 0"/>
+            <geometry>
+                <mesh filename="package://sonic_description/meshes/wheel_shaft.dae" scale="${shaft_scale}"/>
+            </geometry>
+            <material name="dark_grey" />
+        </visual>
+        
+        <collision>
+            <origin xyz="0 0 0" rpy="0 0 0"/>
+            <geometry>
+                <mesh filename="package://sonic_description/meshes/wheel_shaft.dae" scale="${shaft_scale}"/>
+            </geometry>
+        </collision>
+
+        <inertial>
+            <origin xyz="0 0 0" rpy="0 0 0"/>
+            <mass value="0.4"/>
+            <inertia
+                ixx="1.0" ixy="0.0" ixz="0.0"
+                iyy="1.0" iyz="0.0"
+                izz="1.0"/>
+        </inertial>
+    </link>
+
+    <joint name="${name}_joint" type="fixed">
+        <origin xyz="0 0 ${0.12*wheel_radius/0.18}" rpy="0 0 0" />
+        <parent link="${name}_shaft"/>
+        <child link="${name}" />
+        <axis xyz="0 1 0"/>
+    </joint>
+
+    <link name="${name}">
+        <visual>
+            <origin xyz="0 0 0" rpy="0 0 0" />
+            <geometry>
+                <mesh filename="package://sonic_description/meshes/mecanum_wheel_${wheel_type}.dae" scale="${wheel_scale}"/>
+            </geometry>
+            <material name="dark_grey" />
+        </visual>
+
+        <collision>
+            <origin xyz="0 0 0" rpy="0 0 0"/>
+            <geometry>
+                <cylinder radius="${wheel_radius}" length="${wheel_width}"/>
+            </geometry>
+        </collision>
+
+        <inertial>
+            <origin xyz="0 0 0" rpy="0 0 0"/>
+            <mass value="0.5"/>
+            <inertia
+                ixx="1.0" ixy="0" ixz="0"
+                iyy="1.0" iyz="0"
+                izz="1.0"/>
+        </inertial>
+    </link>
+
+    </xacro:macro>
+</robot>
