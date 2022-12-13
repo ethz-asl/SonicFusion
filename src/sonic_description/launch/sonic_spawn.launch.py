@@ -41,7 +41,7 @@ def generate_launch_description():
         gazebo_launch,
         node_robot_state_publisher,
         TimerAction(
-            period=2.0,
+            period=3.0,
             actions=[spawn_sonic],
         ),
     ])

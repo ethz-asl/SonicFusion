@@ -2,7 +2,7 @@
 
 <robot xmlns:xacro="http://ros.org/wiki/xacro">
     <!-- MECCANUM WHEEL -->
-    <xacro:macro name="sonar_sensor" params="id parent origin rpy">
+    <xacro:macro name="sonar_sensor" params="id parent origin rpy fov">
 
     <!-- ULTRASONIC SENSORS -->
     <joint name="sensor_joint_${id}" type="fixed">
@@ -38,19 +38,19 @@
 
     <!-- USS Plugin -->
     <gazebo reference="uss_link_${id}">
-        <sensor type="ray" name="range_sensor_${id}">
+        <sensor type="lidar" name="range_sensor_${id}">
         <visualize>true</visualize>
         <ray>
             <scan>
             <horizontal>
-                <samples>1</samples>
-                <resolution>45</resolution>
-                <min_angle>-0.6545</min_angle>
-                <max_angle>0.6545</max_angle>
+                <samples>30</samples>
+                <resolution>1</resolution>
+                <min_angle>${-(fov/2)/180*PI}</min_angle>
+                <max_angle>${(fov/2)/180*PI}</max_angle>
             </horizontal>
             <vertical>
-                <samples>1</samples>
-                <resolution>15</resolution>
+                <samples>15</samples>
+                <resolution>1</resolution>
                 <min_angle>-0.04</min_angle>
                 <max_angle>0.04</max_angle>
             </vertical>

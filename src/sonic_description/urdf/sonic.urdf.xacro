@@ -64,36 +64,36 @@
 
   <!-- SENSORS FRONT (id=FXX) -->
   <xacro:sonar_sensor id="F48" parent="base_link" 
-  origin="${[body_length/2, 0.24, 0]}" rpy="0 0 ${PI/9}"/>
+  origin="${[body_length/2, 0.24, 0]}" rpy="0 0 ${PI/9}" fov="35"/>
   <xacro:sonar_sensor id="F49" parent="base_link" 
-  origin="${[body_length/2, 0.12, 0]}" rpy="0 0 ${PI/18}"/>
+  origin="${[body_length/2, 0.12, 0]}" rpy="0 0 ${PI/18}" fov="35"/>
   <xacro:sonar_sensor id="F50" parent="base_link" 
-  origin="${[body_length/2, 0, 0]}" rpy="0 0 0"/>
+  origin="${[body_length/2, 0, 0]}" rpy="0 0 0" fov="35"/>
   <xacro:sonar_sensor id="F51" parent="base_link" 
-  origin="${[body_length/2, -0.12, 0]}" rpy="0 0 -${PI/18}"/>
+  origin="${[body_length/2, -0.12, 0]}" rpy="0 0 -${PI/18}" fov="35"/>
   <xacro:sonar_sensor id="F52" parent="base_link" 
-  origin="${[body_length/2, -0.24, 0]}" rpy="0 0 -${PI/9}"/>
+  origin="${[body_length/2, -0.24, 0]}" rpy="0 0 -${PI/9}" fov="35"/>
 
   <!-- SENSORS REAR(id=RXX) -->
   <!--<xacro:sonar_sensor id="R48" parent="base_link" 
-  origin="${[-body_length/2, 0.24, 0]}" rpy="0 0 ${PI - PI/9}"/>
+  origin="${[-body_length/2, 0.24, 0]}" rpy="0 0 ${PI - PI/9}" fov="35"/>
   <xacro:sonar_sensor id="R49" parent="base_link" 
-  origin="${[-body_length/2, 0.12, 0]}" rpy="0 0 ${PI - PI/18}"/>
+  origin="${[-body_length/2, 0.12, 0]}" rpy="0 0 ${PI - PI/18}" fov="35"/>
   <xacro:sonar_sensor id="R50" parent="base_link" 
-  origin="${[-body_length/2, 0, 0]}" rpy="0 0 ${PI}"/>
+  origin="${[-body_length/2, 0, 0]}" rpy="0 0 ${PI}" fov="35"/>
   <xacro:sonar_sensor id="R51" parent="base_link" 
-  origin="${[-body_length/2, -0.12, 0]}" rpy="0 0 ${PI + PI/18}"/>
+  origin="${[-body_length/2, -0.12, 0]}" rpy="0 0 ${PI + PI/18}" fov="35"/>
   <xacro:sonar_sensor id="R52" parent="base_link" 
-  origin="${[-body_length/2, -0.24, 0]}" rpy="0 0 ${PI + PI/9}"/>-->
+  origin="${[-body_length/2, -0.24, 0]}" rpy="0 0 ${PI + PI/9}" fov="35"/>-->
 
   <!-- SENSORS CHEEK (id=CXX) -->
   <!--<xacro:sonar_sensor id="C52" parent="base_link" 
-  origin="${[-body_length/2+0.077, 0.42, 0]}" rpy="0 0 ${3*PI/4}"/>-->
+  origin="${[-body_length/2+0.077, 0.42, 0]}" rpy="0 0 ${3*PI/4}" fov="35"/>-->
   <xacro:sonar_sensor id="C51" parent="base_link" 
-  origin="${[body_length/2-0.077, 0.42, 0]}" rpy="0 0 ${PI/4}"/>
+  origin="${[body_length/2-0.077, 0.42, 0]}" rpy="0 0 ${PI/4}" fov="35"/>
   <xacro:sonar_sensor id="C49" parent="base_link" 
-  origin="${[body_length/2-0.077, -0.42, 0]}" rpy="0 0 ${-PI/4}"/>
+  origin="${[body_length/2-0.077, -0.42, 0]}" rpy="0 0 ${-PI/4}" fov="35"/>
   <!--<xacro:sonar_sensor id="C48" parent="base_link" 
-  origin="${[-body_length/2+0.077, -0.42, 0]}" rpy="0 0 ${-3*PI/4}"/>-->
+  origin="${[-body_length/2+0.077, -0.42, 0]}" rpy="0 0 ${-3*PI/4}" fov="35"/>-->
 
 </robot>

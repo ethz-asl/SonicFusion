@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.8)
-project(sonic_description)
+project(sonic_fusion)
 
 if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
   add_compile_options(-Wall -Wextra -Wpedantic)
@@ -7,17 +7,30 @@ endif()
 
 # find dependencies
 find_package(ament_cmake REQUIRED)
-# uncomment the following section in order to fill in
-# further dependencies manually.
-# find_package(<dependency> REQUIRED)
+find_package(ament_cmake_python REQUIRED)
+find_package(rclcpp REQUIRED)
+find_package(rclpy REQUIRED)
 
+# CPP stuff if needed ...
+# https://roboticsbackend.com/ros2-package-for-both-python-and-cpp-nodes/
+
+# Install Python modules
+ament_python_install_package(${PROJECT_NAME})
+
+# Install Python executables
+install(PROGRAMS
+  scripts/sonic_fusion_node.py
+  DESTINATION lib/${PROJECT_NAME}
+)
+
+# Install Launch files
 install(DIRECTORY
   launch
-  urdf
-  meshes
-  cfg
-  DESTINATION share/${PROJECT_NAME}/
+  DESTINATION share/${PROJECT_NAME}
 )
+
+# Make scripts executable to use --symlink-install
+execute_process(COMMAND sh -c "chmod +x ${CMAKE_CURRENT_LIST_DIR}/scripts/*.py")
 
 if(BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)

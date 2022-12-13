@@ -8,3 +8,6 @@ Developed and tested in ROS2 Rolling.
 
 - Copy to your workspace/src directory
 - install using `colcon build --symlink-install` to make changes possible without building
+
+## TODO
+- automate adaptation of sensor_config in cfg to match sonic description
