@@ -2,6 +2,7 @@
   id: F48
   max_rng: 4.1
   min_rng: 0.15
+  sigma_r: 0.02
   origin:
   - 0.8
   - 0.24
@@ -14,6 +15,7 @@
   id: F49
   max_rng: 4.1
   min_rng: 0.15
+  sigma_r: 0.02
   origin:
   - 0.8
   - 0.12
@@ -26,6 +28,7 @@
   id: F50
   max_rng: 4.1
   min_rng: 0.15
+  sigma_r: 0.02
   origin:
   - 0.8
   - 0.0
@@ -38,6 +41,7 @@
   id: F51
   max_rng: 4.1
   min_rng: 0.15
+  sigma_r: 0.02
   origin:
   - 0.8
   - -0.12
@@ -50,6 +54,7 @@
   id: F52
   max_rng: 4.1
   min_rng: 0.15
+  sigma_r: 0.02
   origin:
   - 0.8
   - -0.24
@@ -62,6 +67,7 @@
   id: C51
   max_rng: 4.1
   min_rng: 0.15
+  sigma_r: 0.02
   origin:
   - 0.7230000000000001
   - 0.42
@@ -74,6 +80,7 @@
   id: C49
   max_rng: 4.1
   min_rng: 0.15
+  sigma_r: 0.02
   origin:
   - 0.7230000000000001
   - -0.42

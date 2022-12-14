@@ -1,19 +1,42 @@
 import functools
-import shapely.ops as shops
-import shapely.geometry as geom 
+import shapely.geometry as geom
+import numpy as np
 
-# TODO NOT USED REMOVE
-def geoms_to_list(func):
+def geoms_to_tuple(func):
     @functools.wraps(func)
-    def wrapper_geom_type_conv(input):
+    def wrapper_geoms_to_tuple(input):
         res = func(input)
-        if type(res) == type(geom.MultiPolygon()) or type(res) == type(geom.MultiLineString()):
-            return list(res.geoms)
-        elif type(res) == type(geom.Polygon()) or type(res) == type(geom.LineString()):
-            return [res]
+        # if type(res) == type(geom.MultiPolygon()) or type(res) == type(geom.MultiLineString()):
+        #     return tuple(res.geoms)
+        # elif type(res) == type(geom.Polygon()) or type(res) == type(geom.LineString()):
+        #     return (res,)
+        # else:
+        #     return (res,) # TODO: REMOVE IF SURE THAT WORKING
+        if 'Multi' in res.geom_type:
+            return tuple(res.geoms)
         else:
-            return [res] # TODO: needed?
-    return wrapper_geom_type_conv
+            return (res,)
+    return wrapper_geoms_to_tuple
 
 class Utils():
-    pass
+    
+    @staticmethod
+    @geoms_to_tuple
+    def geometric_difference(objs):
+        return objs[0].difference(objs[1])
+
+    @staticmethod
+    def flatten(l) -> list:
+        return [item for sublist in l for item in sublist]
+
+    @staticmethod
+    def cart2pol(x, y):
+        rho = np.sqrt(x**2 + y**2)
+        phi = np.arctan2(y, x)
+        return (rho, phi)
+
+    @staticmethod
+    def pol2cart(rho, phi):
+        x = rho * np.cos(phi)
+        y = rho * np.sin(phi)
+        return (x, y)

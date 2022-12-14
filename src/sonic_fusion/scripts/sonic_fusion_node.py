@@ -1,15 +1,22 @@
 #! /usr/bin/env python3
 
+import numpy as np
 import threading
 import shapely.ops as shops
+import shapely.constructive as shcon
+import shapely.geometry as geom
+import shapely.predicates as shpred
 
 import rclpy
 from rclpy.node import Node
 from rclpy.qos import QoSPresetProfiles as QoSPP
 
+from geometry_msgs.msg import Point
 from sensor_msgs.msg import Range
+from nav_msgs.msg import GridCells
 
 from sonic_fusion.uss_model import USSensorModel
+from sonic_fusion.utils import Utils
 
 
 class SonicFusion(Node):
@@ -35,11 +42,15 @@ class SonicFusion(Node):
             self._sensor_subs[sid] = self.create_subscription(
                 Range, topic, self._construct_sensor_callback(sid), QoSPP.SENSOR_DATA.value)
 
-            # Initialize Sensor configurations
-            self._sensors[sid] = USSensorModel(scfg,empty_thr=0.1)
+            # Initialize Sensor configurations TODO: maybe better to init on first message?
+            self._sensors[sid] = USSensorModel(scfg)
 
             # Initialize range data
             self._range_data[sid] = [scfg['max_rng']]
+
+        # TODO: Compute max empty_region
+
+        self._gridvis_pub = self.create_publisher(GridCells, 'sonic/vis/regions', 10)
 
     def _construct_sensor_callback(self, sensor_id):
         def sensor_callback(msg):
@@ -52,25 +63,67 @@ class SonicFusion(Node):
         current_data = {sid: buffer[0] for sid,buffer in self._range_data.items()}
         return current_data
 
+    def get_fused_proba(self, proba_funcs):
+        def fused_proba(X,Y):
+            eval = proba_funcs[0](X,Y)
+            for pf in proba_funcs[1:]:
+                eval = eval + pf(X,Y) - eval*pf(X,Y)
+            return eval
+        return fused_proba
+
+    def visualize(self,proba_map):
+        #env = shcon.envelope(empty_regions)
+
+        # build grid and evaluate
+        x = np.linspace(0,4.5,100)
+        y = np.linspace(-4,4,100)
+        X, Y = np.meshgrid(x,y)
+        Pxy = proba_map(X,Y)
+        xyp = np.vstack([X.ravel(), Y.ravel(), Pxy.ravel()])
+        xy_array = [(xyp[0,i],xyp[1,i]) for i in range(10000) if xyp[2,i]>0.1]
+
+        msg = GridCells()
+        msg.header.frame_id = 'base_link'
+        msg.header.stamp = self.get_clock().now().to_msg()
+        msg.cell_height = 4.5/100
+        msg.cell_width = 8/100
+        msg.cells = []
+        
+        for pxy in xy_array:
+            point = Point()
+            point.x = float(pxy[0])
+            point.y = float(pxy[1])
+            point.z = 0.0
+            msg.cells.append(point)
+
+        self._gridvis_pub.publish(msg)
+
     def update_main(self):
         range_data = self.get_range_data()
         
         # TODO: improve empty and arc by combining (less computations)
-        empty_segs = [scfg.get_empty_seg(range_data[sid]) 
+        empty_segs = [scfg.get_empty_seg_body(range_data[sid]) 
                         for sid,scfg in self._sensors.items()]
         empty_regions = shops.unary_union(empty_segs)
 
-        sensor_arcs = [scfg.get_arc(range_data[sid]) 
+        sensor_arcs = {sid: scfg.get_arc_body(range_data[sid]) 
                         for sid,scfg in self._sensors.items() 
-                        if range_data[sid]<scfg.rng[1]-scfg.empty_thr]
+                        if range_data[sid]<scfg.rng[1]-scfg.empty_thr}
 
-        # Resolve model conflicts
-        new_arcs = [e.difference(empty_regions) for e in sensor_arcs]
+        # Resolve model conflicts and unpack all arcs if they were divided (drop empty)
+        for sid,arc in sensor_arcs.items():
+            sensor_arcs[sid] = [a for a in Utils.geometric_difference((arc,empty_regions)) 
+                                    if not shpred.is_empty(a)]
         
-        # construct gaussians and bayesian full func (THINK ABOUT UPDATE TRANSFORM)
-        
-        # TODO: REMOVE AFTER DEBUGGING
-        self.get_logger().info(str(type(new_arcs[0])))
+        # Construct gaussians (body frame)
+        gaussians = dict.fromkeys(sensor_arcs.keys(), [])
+        for sid, narcs in sensor_arcs.items():
+            gaussians[sid] = [self._sensors[sid].get_gauss_body(narc, range_data[sid]) 
+                                for narc in narcs]
+        gauss_flat = Utils.flatten(list(gaussians.values()))
+        proba_map = self.get_fused_proba(gauss_flat) if gauss_flat else lambda X,Y: 0*X+0*Y
+
+        self.visualize(proba_map)
 
     def loop(self, rate: float, update_type: str):
         ros_rate = self.create_rate(rate)

@@ -78,7 +78,7 @@
             <!-- Set output to sensor_msgs/Range to get same output type as gazebo_ros_range -->
             <output_type>sensor_msgs/Range</output_type>
             <radiation_type>ultrasound</radiation_type>
-            <!-- <frame_name> ommited, will default to range_link -->
+            <frame_name>uss_link_${id}</frame_name>
         </plugin>
         </sensor>
     </gazebo>

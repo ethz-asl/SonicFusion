@@ -32,7 +32,7 @@
       <geometry>
         <mesh filename="package://sonic_description/meshes/sonic_base.stl" scale="0.1 0.1 0.1"/>
       </geometry>
-      <material name="yellow" />
+      <material name="dark_grey" />
     </visual>
     <collision>
       <origin xyz="0 0 0"/>
