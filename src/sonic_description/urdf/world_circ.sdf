@@ -89,7 +89,7 @@
       <elevation>0</elevation>
       <heading_deg>0</heading_deg>
     </spherical_coordinates>
-    <model name='unit_box'>
+    <model name='unit_box_01'>
       <pose>4.60656 -1.85267 0.5 0 -0 0</pose>
       <link name='link'>
         <inertial>
@@ -142,7 +142,7 @@
         <kinematic>0</kinematic>
       </link>
     </model>
-    <model name='unit_cylinder'>
+    <model name='unit_cylinder_01'>
       <pose>7.39518 1.4201 0.5 0 -0 0</pose>
       <link name='link'>
         <inertial>
@@ -197,7 +197,7 @@
         <kinematic>0</kinematic>
       </link>
     </model>
-    <model name='unit_cylinder_0'>
+    <model name='unit_cylinder_02'>
       <pose>8.22384 5.99096 0.5 0 -0 0</pose>
       <link name='link'>
         <inertial>
@@ -252,7 +252,7 @@
         <kinematic>0</kinematic>
       </link>
     </model>
-    <model name='unit_box_2'>
+    <model name='unit_box_02'>
       <pose>7.35118 -2.01097 0.5 0 -0 0</pose>
       <link name='link'>
         <inertial>
@@ -320,7 +320,7 @@
           <wrench>0 0 0 0 -0 0</wrench>
         </link>
       </model>
-      <model name='unit_box'>
+      <model name='unit_box_01'>
         <pose>-2.08461 0.616461 0.5 -0 -0 -0.34157</pose>
         <scale>1 1 1</scale>
         <link name='link'>
@@ -330,7 +330,7 @@
           <wrench>-1.3124 -6.05462 5.33953 0 -0 0</wrench>
         </link>
       </model>
-      <model name='unit_box_2'>
+      <model name='unit_box_02'>
         <pose>-2.16285 -0.848974 0.5 0 0 -0.807179</pose>
         <scale>1 1 1</scale>
         <link name='link'>
@@ -340,7 +340,7 @@
           <wrench>0 -0 0 0 -0 0</wrench>
         </link>
       </model>
-      <model name='unit_box_2_clone'>
+      <model name='unit_box_03'>
         <pose>0.695242 -2.87245 1.01164 -4e-06 -0 -1.32272</pose>
         <scale>2.22941 0.213334 2.02328</scale>
         <link name='link'>
@@ -350,7 +350,7 @@
           <wrench>-3.76509 7.82734 9.25959 0 -0 0</wrench>
         </link>
       </model>
-      <model name='unit_box_2_clone_clone'>
+      <model name='unit_box_04'>
         <pose>-0.723784 -2.74629 1.01164 3e-06 0 -1.93196</pose>
         <scale>1 1 1</scale>
         <link name='link'>
@@ -360,7 +360,7 @@
           <wrench>-1.30278 -8.56996 10.1543 0 -0 0</wrench>
         </link>
       </model>
-      <model name='unit_box_2_clone_clone_0'>
+      <model name='unit_box_05'>
         <pose>2.67224 -1.81108 1.01164 2e-06 4e-06 -2.41202</pose>
         <scale>1 1 1</scale>
         <link name='link'>
@@ -370,7 +370,7 @@
           <wrench>-0.45964 -0.497601 -9.08796 0 -0 0</wrench>
         </link>
       </model>
-      <model name='unit_cylinder'>
+      <model name='unit_cylinder_01'>
         <pose>-0.180557 1.80452 0.499991 -1e-06 -1e-06 0.099703</pose>
         <scale>1 1 1</scale>
         <link name='link'>
@@ -380,7 +380,7 @@
           <wrench>0 0 -9.8 0 -0 0</wrench>
         </link>
       </model>
-      <model name='unit_cylinder_0'>
+      <model name='unit_cylinder_02'>
         <pose>2.20006 -0.068019 0.5 0 -0 0.113795</pose>
         <scale>1 1 1.85733</scale>
         <link name='link'>
@@ -401,7 +401,7 @@
         <projection_type>perspective</projection_type>
       </camera>
     </gui>
-    <model name='unit_box_2_clone'>
+    <model name='unit_box_03'>
       <pose>0.166512 -2.47158 0.5 0 0 -0.807179</pose>
       <link name='link'>
         <inertial>
@@ -454,7 +454,7 @@
         <kinematic>0</kinematic>
       </link>
     </model>
-    <model name='unit_box_2_clone_clone'>
+    <model name='unit_box_04'>
       <pose>-0.514517 -2.97456 1.01164 6e-06 0 -1.32273</pose>
       <link name='link'>
         <inertial>
@@ -507,7 +507,7 @@
         <kinematic>0</kinematic>
       </link>
     </model>
-    <model name='unit_box_2_clone_clone_0'>
+    <model name='unit_box_05'>
       <pose>-2.45475 2.58246 1.01164 -1e-05 0 -1.32272</pose>
       <link name='link'>
         <inertial>
@@ -560,5 +560,7 @@
         <kinematic>0</kinematic>
       </link>
     </model>
+    <!-- ROS WORLD PLUGIN -->
+    <plugin name="entity_states" filename="libgazebo_ros_state.so"/>
   </world>
 </sdf>
