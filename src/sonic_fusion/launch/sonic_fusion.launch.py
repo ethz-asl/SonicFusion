@@ -48,6 +48,17 @@ def generate_launch_description():
         'sonic_description'), 'urdf/world_circ.sdf')
 
     gt_data = get_world_object_data(world_file)
+
+    # For hardware tests
+    # config_file = os.path.join(
+    #     get_package_share_directory('sonic_description'),
+    #     'cfg', 'sensor_cfgs_hw.yaml')
+
+    # with open(config_file) as f:
+    #     sensor_cfgs_array = yaml.safe_load(f)
+    # sensor_cfgs = {e['id']: e for e in sensor_cfgs_array}
+    # 
+    # gt_data = {}
         
     node=Node(
         package = 'sonic_fusion',
@@ -56,7 +67,8 @@ def generate_launch_description():
         parameters= [
             {"sensor_cfgs": repr(sensor_cfgs)},
             {"gt_data": repr(gt_data)},
-        ]
+            {"hw_test": False},
+        ],
     )
     ld.add_action(node)
     return ld

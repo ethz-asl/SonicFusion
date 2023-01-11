@@ -10,17 +10,12 @@ import shapely.affinity as shaffin
 from scipy.spatial.transform import Rotation
 
 import geometry_msgs.msg as geomsgs
+import sensor_msgs
 
 def geoms_to_tuple(func):
     @functools.wraps(func)
     def wrapper_geoms_to_tuple(input):
         res = func(input)
-        # if type(res) == type(geom.MultiPolygon()) or type(res) == type(geom.MultiLineString()):
-        #     return tuple(res.geoms)
-        # elif type(res) == type(geom.Polygon()) or type(res) == type(geom.LineString()):
-        #     return (res,)
-        # else:
-        #     return (res,) # TODO: REMOVE IF SURE THAT WORKING
         if any((n in res.geom_type) for n in ('Multi','Collection')):
             return tuple(res.geoms)
         else:
@@ -45,14 +40,17 @@ class Utils():
         return shapely.intersection(objs[0],objs[1])
 
     @staticmethod
-    def geoply_to_plymsg(polygon):
-        point_arr = []
-        for point in polygon.exterior.coords:
-            p = geomsgs.Point32()
-            p.x = float(point[0])
-            p.y = float(point[1])
-            p.z = 0.0
-            point_arr.append(p)
+    def geoply_to_plymsg(polygon,ply_offset=0.06):
+        if not type(polygon)==list:
+            point_arr = []
+            for point in polygon.exterior.coords:
+                p = geomsgs.Point32()
+                p.x = float(point[0])
+                p.y = float(point[1])
+                p.z = ply_offset
+                point_arr.append(p)
+        else:
+            point_arr = []
 
         msg = geomsgs.PolygonStamped()
         msg.polygon.points = point_arr
@@ -75,21 +73,22 @@ class Utils():
         return shapely.length(shl)
 
     @classmethod
-    def sample_front(cls, rois, sample_radius, fov, pmap) -> list:
+    def sample_front(cls, rois, sample_radius, fov, pmap, Psamp_prev, pthr: float) -> list:
         nrays = max(int(abs(fov[1] - fov[0])/np.pi * 100),10)
         phis = np.linspace(*fov,nrays)
 
-        if not rois:
-            return [cls.pol2cart(sample_radius,phi) for phi in phis]
-
-        # TODO Vectorize pmap with numpy and compare speed
-        nrads = max(int(sample_radius/4.0 * 300),20)
+        nrads = max(int(sample_radius/4.0 * 200),20)
         rads = np.linspace(0.0,sample_radius,nrads)
         Ra, Ph = np.meshgrid(rads,phis)
         X_rays, Y_rays = cls.pol2cart(Ra,Ph)
 
+        if not rois:
+            return [cls.pol2cart(sample_radius,phi) for phi in phis], Psamp_prev, 0*X_rays
+
         Psamp = pmap(X_rays,Y_rays) # limiting computation (as it should be..)
-        Psamp_valid = Psamp > 0.1
+        Psamp_integr_parts = Psamp_prev+[Psamp]
+        Psamp = cls.proba_grid_or(Psamp_integr_parts)
+        Psamp_valid = Psamp >= pthr
         not_found_filt = np.all(Psamp_valid==False,axis=1)
         idxs_nearest = Psamp_valid.argmax(1) + (Psamp.shape[1]-1)*(not_found_filt.astype(int))
         idxs = np.vstack((np.arange(idxs_nearest.shape[0]),idxs_nearest))
@@ -101,7 +100,18 @@ class Utils():
         fil = ~(cross_roi & not_found_filt)
         front = list(compress(front_full,fil))
 
-        return front
+        return front, Psamp_integr_parts, np.vstack([X_rays.ravel(), Y_rays.ravel(), Psamp.ravel()])
+
+    @staticmethod
+    def pa_or_pb(a,b):
+        return a + b - a*b
+
+    @classmethod
+    def proba_grid_or(cls,proba_grids):
+        res = proba_grids[0]
+        for p in proba_grids[1:]:
+            res = cls.pa_or_pb(res,p)
+        return res
 
     @classmethod
     def find_angular_region(cls, ply: geom.Polygon):
@@ -114,21 +124,23 @@ class Utils():
     def compute_error(err_type: str, gt_objects: dict, *, points=None, ref_area=None):
         if err_type=='nearest_object':
             assert(points != None)
+
+            # map points to geom Point
+            ray_points = list(map(geom.Point, points))
+            # union gt_objects (beforehand)
+            ugt = shapely.MultiPolygon(list(gt_objects.values()))
+            outer_bounds = geom.MultiLineString([geom.LineString(obj.exterior.coords) 
+                                                for obj in gt_objects.values()])
+            # find nearest distance for each point
+            nearest_points = [[o for o in shops.nearest_points(rp, outer_bounds)][-1] for rp in ray_points]
+            nearest_dists = [rp.distance(nrstp) for rp,nrstp in zip(ray_points,nearest_points)]
+            # check if inside or outside
+            fil_contains = list(map(ugt.contains, ray_points))
+            # change sign of distance value correspondigly
+            min_errors = [-nrstd if cont else nrstd for nrstd,cont in zip(nearest_dists,fil_contains)]
             
-            min_errors = []
-            for x,y in points:
-                ray_point = geom.Point((x,y))
-                min_dists = []
-                for obj in gt_objects.values():
-                    outer_bound = geom.LineString(obj.exterior.coords)
-                    obj_point = [o for o in shops.nearest_points(ray_point, outer_bound)][-1]
-                    if obj.contains(ray_point):
-                        min_dists.append(-ray_point.distance(obj_point))
-                    else:
-                        min_dists.append(ray_point.distance(obj_point))
-                idx = np.abs(min_dists).argmin()
-                min_errors.append(min_dists[idx])
             return min_errors
+            
         elif err_type=='area_errors':
             assert(ref_area != None)
 
@@ -146,26 +158,26 @@ class Utils():
 
         max_r = 20.0
         for i in range(2000):
-            # Step in 1mm and find max radius
+            # Step in 1mm and find max radius TODO: use function shapely?
             radius = (i+1)/(1e2)
             bounding_circ = geom.Point((0,0)).buffer(radius)
             if shpred.contains(bounding_circ, max_empty_reg):
                 max_r = radius
                 break
 
-        ray_ccw = geom.LineString([(0,0),(-max_r,0)])
-        ray_cw = geom.LineString([(0,0),(-max_r,0)])
+        ray_ccw = geom.LineString([(-0.05,0),(-max_r,0.0)])
+        ray_cw = geom.LineString([(-0.05,0),(-max_r,0.0)])
         min_phi, max_phi = 0.0, 0.0
         found_min, found_max = False, False
-        for j in range(1,11):
+        for j in range(1,101):
             if shpred.intersects(ray_ccw,max_empty_reg) and not found_min:
-                min_phi = -np.pi + (j-1)/10*(np.pi)
+                min_phi = -np.pi + 2*(j-1)/100*(np.pi)
                 found_min = True
             if shpred.intersects(ray_cw,max_empty_reg) and not found_max:
-                max_phi = np.pi - (j-1)/10*(np.pi)
+                max_phi = np.pi - 2*(j-1)/100*(np.pi)
                 found_max = True
-            ray_ccw = shaffin.rotate(ray_ccw, (j-1)/20*(np.pi), origin=(0,0), use_radians=True)
-            ray_cw = shaffin.rotate(ray_cw, -(j-1)/20*(np.pi), origin=(0,0), use_radians=True)
+            ray_ccw = shaffin.rotate(ray_ccw, 2*(np.pi)/100, origin=(0,0), use_radians=True) #(j-1)/20*(np.pi)
+            ray_cw = shaffin.rotate(ray_cw, -2*(np.pi)/100, origin=(0,0), use_radians=True)
 
         return (max_r, min_phi, max_phi)
 
