@@ -12,7 +12,6 @@ Panels:
         - /Rois1/Polygon3/Topic1
         - /Rois1/Polygon4/Topic1
         - /Rois1/Polygon5/Topic1
-        - /LaserScan1
       Splitter Ratio: 0.4378109574317932
     Tree Height: 751
   - Class: rviz_common/Selection
@@ -506,7 +505,7 @@ Visualization Manager:
       Displays:
         - Alpha: 1
           Class: rviz_default_plugins/Polygon
-          Color: 25; 255; 0
+          Color: 36; 31; 49
           Enabled: true
           Name: Polygon
           Topic:
@@ -519,7 +518,7 @@ Visualization Manager:
           Value: true
         - Alpha: 1
           Class: rviz_default_plugins/Polygon
-          Color: 25; 255; 0
+          Color: 36; 31; 49
           Enabled: true
           Name: Polygon
           Topic:
@@ -532,7 +531,7 @@ Visualization Manager:
           Value: true
         - Alpha: 1
           Class: rviz_default_plugins/Polygon
-          Color: 25; 255; 0
+          Color: 36; 31; 49
           Enabled: true
           Name: Polygon
           Topic:
@@ -545,40 +544,6 @@ Visualization Manager:
           Value: true
       Enabled: true
       Name: GT Free Space
-    - Alpha: 1
-      Autocompute Intensity Bounds: true
-      Autocompute Value Bounds:
-        Max Value: 10
-        Min Value: -10
-        Value: true
-      Axis: Z
-      Channel Name: intensity
-      Class: rviz_default_plugins/LaserScan
-      Color: 255; 255; 255
-      Color Transformer: Intensity
-      Decay Time: 0
-      Enabled: true
-      Invert Rainbow: false
-      Max Color: 255; 255; 255
-      Max Intensity: 0
-      Min Color: 0; 0; 0
-      Min Intensity: 0
-      Name: LaserScan
-      Position Transformer: XYZ
-      Selectable: true
-      Size (Pixels): 3
-      Size (m): 0.10000000149011612
-      Style: Flat Squares
-      Topic:
-        Depth: 5
-        Durability Policy: Volatile
-        Filter size: 10
-        History Policy: Keep Last
-        Reliability Policy: Reliable
-        Value: /sonic/gt_lidar_C49
-      Use Fixed Frame: true
-      Use rainbow: true
-      Value: true
   Enabled: true
   Global Options:
     Background Color: 130; 130; 130

@@ -77,20 +77,25 @@ class USSensorModel():
             return pr*pth
         
         return gaussian_on_arc
-    
+
     def get_gt_segment(self,lidar_ranges,*,resolution=30):
         start_ang = self.fov/2
         end_ang = -self.fov/2
-        radii = np.array(lidar_ranges)
+        radii = np.array(lidar_ranges) - self.empty_thr
         theta = np.radians(np.linspace(start_ang, end_ang, resolution))
 
         x = self.origin[0] + radii * np.cos(theta+self.rpy[2])
         y = self.origin[1] + radii * np.sin(theta+self.rpy[2])
 
         arc = np.column_stack([x,y])
+
         # Sort points since lidar_ranges unordered
-        # find distances from each point -> where largest dist, point left (or right)
-        # 
-        #dists = np.sum((arc[:,0]-arc[0,0])**2 + (arc[:,1]-arc[0,0])**2)
-        seg = np.vstack((self.origin[:2],arc))
-        return seg
+        # arc_stack = np.row_stack(tuple(arc for _ in range(resolution-1)))
+        # arc_shift_stack = np.row_stack(tuple(np.roll(arc,i,axis=0) for i in range(1,resolution)))
+        # full_dists = np.sum(np.power(arc_stack-arc_shift_stack,2),axis=1)
+        # imin = np.argmin(full_dists) % (resolution-1)
+        # diffs = arc - arc[imin,:]
+        # dists = np.sum(np.power(diffs,2),axis=1)
+        # arc = arc[np.argsort(dists),:]
+
+        return np.vstack((self.origin[:2],arc))

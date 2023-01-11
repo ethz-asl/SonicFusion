@@ -171,10 +171,10 @@ class Utils():
         found_min, found_max = False, False
         for j in range(1,101):
             if shpred.intersects(ray_ccw,max_empty_reg) and not found_min:
-                min_phi = -np.pi + 2*(j-1)/100*(np.pi)
+                min_phi = -np.pi + 2*(j-2)/100*(np.pi)
                 found_min = True
             if shpred.intersects(ray_cw,max_empty_reg) and not found_max:
-                max_phi = np.pi - 2*(j-1)/100*(np.pi)
+                max_phi = np.pi - 2*(j-2)/100*(np.pi)
                 found_max = True
             ray_ccw = shaffin.rotate(ray_ccw, 2*(np.pi)/100, origin=(0,0), use_radians=True) #(j-1)/20*(np.pi)
             ray_cw = shaffin.rotate(ray_cw, -2*(np.pi)/100, origin=(0,0), use_radians=True)

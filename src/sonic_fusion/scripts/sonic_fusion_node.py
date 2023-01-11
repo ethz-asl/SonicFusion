@@ -144,7 +144,9 @@ class SonicFusion(Node):
 
     def _construct_gtlidar_callback(self, sensor_id, min_rng, max_rng):
         def gtlidar_callback(msg: LaserScan):
-            self._gtlidar_data[sensor_id] = [2 for _ in range(30)]#[min(max_rng,max(min_rng,x)) for x in msg.ranges]
+            fil_ranges = [min(max_rng,max(min_rng,x)) for x in msg.ranges]
+            fil_ranges.reverse()
+            self._gtlidar_data[sensor_id] = fil_ranges
         return gtlidar_callback
 
     def _construct_sensor_callback(self, sensor_id, min_rng, max_rng):
@@ -200,7 +202,7 @@ class SonicFusion(Node):
         vrois = [shaffin.affine_transform(r,matrix) for r in rois]
         return vrois
 
-    def visualize(self,xyp,rois,front,*,front_region=None):
+    def visualize(self,xyp,rois,front,gt_space,*,front_region=None):
 
         # xy_array = [(xyp[0,i],xyp[1,i]) for i in range(xyp[0,:].shape[0]) if xyp[2,i]>0.1]
 
@@ -221,14 +223,15 @@ class SonicFusion(Node):
         # self._gridvis_pub.publish(msg)
 
         # GT Lidar Data
+        gt_space_list = []
+        if any((n in gt_space.geom_type) for n in ('Multi','Collection')):
+            gt_space_list = list(gt_space.geoms)
+        else:
+            gt_space_list = [gt_space]
         n_pubs = len(self._gt_lidar_pubs)
-        ply_coords = {sid:self._sensors[sid].get_gt_segment(ranges) for sid,ranges in self._gtlidar_data.items()}
-        self.get_logger().info(repr(self._gtlidar_data['F51']))
-        plys = [geom.Polygon(coords) for coords in ply_coords.values()]
-        gt_space = list(Utils.geometric_union(plys))
-        gt_space = gt_space + [[0] for _ in range(n_pubs-len(gt_space))] if len(gt_space)<n_pubs else gt_space
+        gt_space_list = gt_space_list + [[0] for _ in range(n_pubs-len(gt_space_list))] if len(gt_space_list)<n_pubs else gt_space_list
         for i,pub in enumerate(self._gt_lidar_pubs):
-            msg_ply = Utils.geoply_to_plymsg(gt_space[i])
+            msg_ply = Utils.geoply_to_plymsg(gt_space_list[i])
             msg_ply.header.frame_id = 'base_link'
             msg_ply.header.stamp = self.get_clock().now().to_msg()
             pub.publish(msg_ply)
@@ -364,11 +367,19 @@ class SonicFusion(Node):
             ne_arr = np.array(nearest_errors)
             n_inside = np.sum(ne_arr <= 0, axis=0)
             n_outside = np.sum(ne_arr > 0, axis=0)
+
+            ply_coords = {sid:self._sensors[sid].get_gt_segment(ranges) for sid,ranges in self._gtlidar_data.items()}
+            plys = [geom.Polygon(coords) for coords in ply_coords.values()]
+            gt_space = shops.unary_union(plys)
+            diff_free_space = shapely.intersection(gt_space,free_space)
+            amount_in_space = shapely.area(diff_free_space) / shapely.area(gt_space)
+
+            self.get_logger().info(repr(amount_in_space))
             #self.get_logger().info("NE - In: "+str(n_inside)+" Out: "+str(n_outside)+" / "+"AE - "+repr(area_errors))
 
             # TODO trajectory check
 
-            self.visualize(xyp_samp,self._fusion_vidata['rois'],front,front_region=front_region)
+            self.visualize(xyp_samp,self._fusion_vidata['rois'],front,gt_space,front_region=front_region)
         else:  
             self.visualize(xyp_samp,self._fusion_vidata['rois'],front)
 
