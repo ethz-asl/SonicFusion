@@ -58,6 +58,7 @@ class SonicFusion(Node):
     _sensor_subs = dict()
     _gtlidar_subs = dict()
     _range_data = dict()
+    _gtlidar_data = dict()
     _sensors = dict()
     _gt_objects_init = dict()
     _gt_objects = dict()
@@ -107,6 +108,7 @@ class SonicFusion(Node):
             self._sensors[sid] = USSensorModel(scfg)
             # Initialize range data
             self._range_data[sid] = [scfg['max_rng']]
+            self._gtlidar_data[sid] = [scfg['max_rng'] for _ in range(30)] # TODO resolution param?
             # Get max empty region
             max_empty_segs.append(self._sensors[sid].get_empty_seg_body(scfg['max_rng']))
 
@@ -136,10 +138,13 @@ class SonicFusion(Node):
         self._front_pub = self.create_publisher(MarkerArray, 'sonic/vis/front', 10)
         self._frontreg_pub = self.create_publisher(geomsg.PolygonStamped, 'sonic/vis/front_reg', 10)
         self._gt_obj_pub = [self.create_publisher(geomsg.PolygonStamped, 'sonic/vis/gt_obj'+str(i), 10) for i in range(len(self._gt_objects.values()))]
+        self._gt_lidar_pubs = [self.create_publisher(geomsg.PolygonStamped, 'sonic/vis/gt_lidar01', QoSPP.SENSOR_DATA.value),
+                            self.create_publisher(geomsg.PolygonStamped, 'sonic/vis/gt_lidar02', QoSPP.SENSOR_DATA.value),
+                            self.create_publisher(geomsg.PolygonStamped, 'sonic/vis/gt_lidar03', QoSPP.SENSOR_DATA.value)]
 
     def _construct_gtlidar_callback(self, sensor_id, min_rng, max_rng):
         def gtlidar_callback(msg: LaserScan):
-            self.get_logger().info(repr(len(msg.ranges))) #OK 30 
+            self._gtlidar_data[sensor_id] = [2 for _ in range(30)]#[min(max_rng,max(min_rng,x)) for x in msg.ranges]
         return gtlidar_callback
 
     def _construct_sensor_callback(self, sensor_id, min_rng, max_rng):
@@ -214,6 +219,19 @@ class SonicFusion(Node):
         #     msg.cells.append(point)
 
         # self._gridvis_pub.publish(msg)
+
+        # GT Lidar Data
+        n_pubs = len(self._gt_lidar_pubs)
+        ply_coords = {sid:self._sensors[sid].get_gt_segment(ranges) for sid,ranges in self._gtlidar_data.items()}
+        self.get_logger().info(repr(self._gtlidar_data['F51']))
+        plys = [geom.Polygon(coords) for coords in ply_coords.values()]
+        gt_space = list(Utils.geometric_union(plys))
+        gt_space = gt_space + [[0] for _ in range(n_pubs-len(gt_space))] if len(gt_space)<n_pubs else gt_space
+        for i,pub in enumerate(self._gt_lidar_pubs):
+            msg_ply = Utils.geoply_to_plymsg(gt_space[i])
+            msg_ply.header.frame_id = 'base_link'
+            msg_ply.header.stamp = self.get_clock().now().to_msg()
+            pub.publish(msg_ply)
 
         # Heatmap
         points = np.vstack((xyp[0,:].flatten(),xyp[1,:].flatten()))
