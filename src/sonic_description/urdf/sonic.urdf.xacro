@@ -61,9 +61,9 @@
   <xacro:meccanum_wheel name="lower_right_wheel" parent="base_link" 
   origin="${[-(body_length/2-body_length*0.254), -(body_width/2-0.2), -0.04]}" wheel_type="left"/>
 
-
+  <!--DEV ALG CONFIG-->
   <!-- SENSORS FRONT (id=FXX) -->
-  <xacro:sonar_sensor id="F48" parent="base_link" 
+  <!-- <xacro:sonar_sensor id="F48" parent="base_link" 
   origin="${[body_length/2, 0.24, 0]}" rpy="0 0 ${PI/9}" fov="35"/>
   <xacro:sonar_sensor id="F49" parent="base_link" 
   origin="${[body_length/2, 0.12, 0]}" rpy="0 0 ${PI/18}" fov="35"/>
@@ -72,7 +72,7 @@
   <xacro:sonar_sensor id="F51" parent="base_link" 
   origin="${[body_length/2, -0.12, 0]}" rpy="0 0 -${PI/18}" fov="35"/>
   <xacro:sonar_sensor id="F52" parent="base_link" 
-  origin="${[body_length/2, -0.24, 0]}" rpy="0 0 -${PI/9}" fov="35"/>
+  origin="${[body_length/2, -0.24, 0]}" rpy="0 0 -${PI/9}" fov="35"/> -->
 
   <!-- SENSORS REAR(id=RXX) -->
   <!--<xacro:sonar_sensor id="R48" parent="base_link" 
@@ -89,11 +89,34 @@
   <!-- SENSORS CHEEK (id=CXX) -->
   <!--<xacro:sonar_sensor id="C52" parent="base_link" 
   origin="${[-body_length/2+0.077, 0.42, 0]}" rpy="0 0 ${3*PI/4}" fov="35"/>-->
-  <xacro:sonar_sensor id="C51" parent="base_link" 
+  <!-- <xacro:sonar_sensor id="C51" parent="base_link" 
   origin="${[body_length/2-0.077, 0.42, 0]}" rpy="0 0 ${PI/4}" fov="35"/>
   <xacro:sonar_sensor id="C49" parent="base_link" 
-  origin="${[body_length/2-0.077, -0.42, 0]}" rpy="0 0 ${-PI/4}" fov="35"/>
+  origin="${[body_length/2-0.077, -0.42, 0]}" rpy="0 0 ${-PI/4}" fov="35"/> -->
   <!--<xacro:sonar_sensor id="C48" parent="base_link" 
   origin="${[-body_length/2+0.077, -0.42, 0]}" rpy="0 0 ${-3*PI/4}" fov="35"/>-->
+  <!--END DEV ALG CONFIG-->
+
+  <!--Focal Point EXPERIMENT CONFIG-->
+  <xacro:property name="max_angle" value="0.39331706" />  <!--arctan(300/(723-fx)) FINF::0.0 F0::0.39331706 F200::0.52079186  F100:0.4487716 F300::0.61688702-->
+
+  <!-- SENSORS CHEEK (id=CXX) -->
+  <xacro:sonar_sensor id="C51" parent="base_link" 
+  origin="${[body_length/2-0.077, 0.42, 0]}" rpy="0 0 ${max_angle}" fov="30"/>
+  <xacro:sonar_sensor id="C49" parent="base_link" 
+  origin="${[body_length/2-0.077, -0.42, 0]}" rpy="0 0 ${-max_angle}" fov="30"/>
+
+  <!-- SENSORS FRONT (id=FXX) -->
+  <xacro:sonar_sensor id="F48" parent="base_link" 
+  origin="${[body_length/2, 0.24, 0]}" rpy="0 0 ${max_angle-1*2*max_angle/6.0}" fov="30"/>
+  <xacro:sonar_sensor id="F49" parent="base_link" 
+  origin="${[body_length/2, 0.12, 0]}" rpy="0 0 ${max_angle-2*2*max_angle/6.0}" fov="30"/>
+  <xacro:sonar_sensor id="F50" parent="base_link" 
+  origin="${[body_length/2, 0, 0]}" rpy="0 0 0" fov="30"/>
+  <xacro:sonar_sensor id="F51" parent="base_link" 
+  origin="${[body_length/2, -0.12, 0]}" rpy="0 0 ${max_angle-4*2*max_angle/6.0}" fov="30"/>
+  <xacro:sonar_sensor id="F52" parent="base_link" 
+  origin="${[body_length/2, -0.24, 0]}" rpy="0 0 ${max_angle-5*2*max_angle/6.0}" fov="30"/>
+  <!--Focal Point END EXPERIMENT CONFIG-->
 
 </robot>

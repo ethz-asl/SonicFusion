@@ -1,0 +1,91 @@
+- fov: 30
+  id: F48
+  max_rng: 4.1
+  min_rng: 0.15
+  origin:
+  - 0.8
+  - 0.24
+  - 0
+  rpy:
+  - 0
+  - 0
+  - 0.29918106666666666
+  sigma_r: 0.02
+- fov: 30
+  id: F49
+  max_rng: 4.1
+  min_rng: 0.15
+  origin:
+  - 0.8
+  - 0.12
+  - 0
+  rpy:
+  - 0
+  - 0
+  - 0.14959053333333333
+  sigma_r: 0.02
+- fov: 30
+  id: F50
+  max_rng: 4.1
+  min_rng: 0.15
+  origin:
+  - 0.8
+  - 0.0
+  - 0
+  rpy:
+  - 0
+  - 0
+  - 0
+  sigma_r: 0.02
+- fov: 30
+  id: F51
+  max_rng: 4.1
+  min_rng: 0.15
+  origin:
+  - 0.8
+  - -0.12
+  - 0
+  rpy:
+  - 0
+  - 0
+  - -0.14959053333333333
+  sigma_r: 0.02
+- fov: 30
+  id: F52
+  max_rng: 4.1
+  min_rng: 0.15
+  origin:
+  - 0.8
+  - -0.24
+  - 0
+  rpy:
+  - 0
+  - 0
+  - -0.2991810666666666
+  sigma_r: 0.02
+- fov: 30
+  id: C51
+  max_rng: 4.1
+  min_rng: 0.15
+  origin:
+  - 0.7230000000000001
+  - 0.42
+  - 0
+  rpy:
+  - 0
+  - 0
+  - 0.4487716
+  sigma_r: 0.02
+- fov: 30
+  id: C49
+  max_rng: 4.1
+  min_rng: 0.15
+  origin:
+  - 0.7230000000000001
+  - -0.42
+  - 0
+  rpy:
+  - 0
+  - 0
+  - -0.4487716
+  sigma_r: 0.02

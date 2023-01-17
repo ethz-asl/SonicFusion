@@ -15,7 +15,7 @@ import rclpy
 from rclpy.node import Node
 from rclpy.qos import QoSPresetProfiles as QoSPP
 
-import std_msgs
+import std_msgs.msg as std_msgs
 import geometry_msgs.msg as geomsg
 from sensor_msgs.msg import Range, PointCloud2, PointField, LaserScan
 from nav_msgs.msg import GridCells, Odometry
@@ -77,6 +77,9 @@ class SonicFusion(Node):
         self.declare_parameter('sensor_cfgs', '')
         self.declare_parameter('gt_data', '')
         self.declare_parameter('hw_test', False)
+        self.declare_parameter('focal_point', 0.0)
+        self._hw_test = self.get_parameter('hw_test').value
+        self._focal_point = self.get_parameter('focal_point').value
 
         # Init ground truth object data (static) TODO: encode dimensions in names and get pose from model state
         gt_data = eval(self.get_parameter('gt_data').value)
@@ -114,13 +117,19 @@ class SonicFusion(Node):
 
         # Compute max empty_region
         self._max_empty_region = shops.unary_union(max_empty_segs)
-        self._observable = Utils.get_observable_region(self._max_empty_region) #(max_r, phi, -phi)
+        self._observable = Utils.get_observable_region(self._max_empty_region,self._focal_point) #(max_r, phi, -phi)
 
         # Init Robot Odometry
         self._robot_odom = [0.0 for _ in range(6)] # init at 'world' frame for objects
         self._odom_sub = self.create_subscription(
             Odometry, 'sonic/odom', self.odom_callback, QoSPP.SENSOR_DATA.value
         )
+
+        # Robot Box for checking free space
+        self.robo_bound = shapely.box(-0.815,-0.515,0.815,0.515)
+
+        # Metric msgs
+        self.metric_data = [None,tuple(),[],{}]
 
         # Init Fusion data
         self._fusion_data = {'fused_proba': lambda X,Y: 0*X + 0*Y,
@@ -141,6 +150,12 @@ class SonicFusion(Node):
         self._gt_lidar_pubs = [self.create_publisher(geomsg.PolygonStamped, 'sonic/vis/gt_lidar01', QoSPP.SENSOR_DATA.value),
                             self.create_publisher(geomsg.PolygonStamped, 'sonic/vis/gt_lidar02', QoSPP.SENSOR_DATA.value),
                             self.create_publisher(geomsg.PolygonStamped, 'sonic/vis/gt_lidar03', QoSPP.SENSOR_DATA.value)]
+        self._freespace_pubs = [self.create_publisher(geomsg.PolygonStamped, 'sonic/vis/freespace01', QoSPP.SENSOR_DATA.value),
+                            self.create_publisher(geomsg.PolygonStamped, 'sonic/vis/freespace02', QoSPP.SENSOR_DATA.value),
+                            self.create_publisher(geomsg.PolygonStamped, 'sonic/vis/freespace03', QoSPP.SENSOR_DATA.value),
+                            self.create_publisher(geomsg.PolygonStamped, 'sonic/vis/freespace04', QoSPP.SENSOR_DATA.value)]
+        self._metric_pub = self.create_publisher(std_msgs.String, 'sonic/metrics', 10)
+
 
     def _construct_gtlidar_callback(self, sensor_id, min_rng, max_rng):
         def gtlidar_callback(msg: LaserScan):
@@ -202,7 +217,7 @@ class SonicFusion(Node):
         vrois = [shaffin.affine_transform(r,matrix) for r in rois]
         return vrois
 
-    def visualize(self,xyp,rois,front,gt_space,*,front_region=None):
+    def visualize(self,xyp,rois,front,gt_space,*,front_region=None,free_space=None):
 
         # xy_array = [(xyp[0,i],xyp[1,i]) for i in range(xyp[0,:].shape[0]) if xyp[2,i]>0.1]
 
@@ -221,6 +236,21 @@ class SonicFusion(Node):
         #     msg.cells.append(point)
 
         # self._gridvis_pub.publish(msg)
+
+        # Free space
+        if not free_space==None:
+            free_space_list = []
+            if any((n in free_space.geom_type) for n in ('Multi','Collection')):
+                free_space_list = list(free_space.geoms)
+            else:
+                free_space_list = [free_space]
+            n_pubs = len(self._freespace_pubs)
+            free_space_list = free_space_list + [[0] for _ in range(n_pubs-len(free_space_list))] if len(free_space_list)<n_pubs else free_space_list
+            for i,publ in enumerate(self._freespace_pubs):
+                msg_ply = Utils.geoply_to_plymsg(free_space_list[i],0.08)
+                msg_ply.header.frame_id = 'base_link'
+                msg_ply.header.stamp = self.get_clock().now().to_msg()
+                publ.publish(msg_ply)   
 
         # GT Lidar Data
         gt_space_list = []
@@ -324,7 +354,8 @@ class SonicFusion(Node):
         rois = []
         gaussians = dict.fromkeys(sensor_arcs.keys(), [])
         for sid, narcs in sensor_arcs.items():
-            rois += [shcon.buffer(narc, 0.15, cap_style="square", join_style="bevel") for narc in narcs]
+            buffer_size = 0.15 if range_data[sid]<1.8 else 0.3
+            rois += [shcon.buffer(narc, buffer_size, cap_style="square", join_style="bevel") for narc in narcs]
             gaussians[sid] = [self._sensors[sid].get_gauss_body(narc, range_data[sid]) 
                                 for narc in narcs]
         rois = list(Utils.geometric_union(rois))
@@ -348,40 +379,62 @@ class SonicFusion(Node):
         
 
     def update_eval(self):
-        front, self._psamp_buffer, xyp_samp = Utils.sample_front(self._fusion_vidata['rois'], self._observable[0],
+        front, self._psamp_buffer, xyp_samp, found_front_points = Utils.sample_front(self._fusion_vidata['rois'], self._observable[0],
                                    (self._observable[1],self._observable[2]), 
-                                   self._fusion_vidata['fused_proba'], 
-                                   self._psamp_buffer, 0.8)
+                                   self._fusion_vidata['fused_proba'], self._focal_point, 
+                                   self._psamp_buffer, self._max_empty_region, 0.1)
         self._psamp_buffer = self._psamp_buffer[-3:]
 
-        front_ply = [(0,0)]+front
-        if len(front_ply) >= 4 and list(self._gt_objects.keys()):
+        front_ply = [(self._focal_point,0)]+front
+        if len(front_ply) >= 4:
+
             front_region = geom.Polygon(geom.LinearRing(front_ply))
 
-            nearest_errors = Utils.compute_error('nearest_object', self._gt_objects, 
-                                points=[f for f in front if f[0]**2 + f[1]**2 < (self._observable[0]-0.001)**2])
-
-            free_space = shapely.intersection(front_region,self._max_empty_region)
-            area_errors = Utils.compute_error('area_errors',self._gt_objects,ref_area=free_space)
-
-            ne_arr = np.array(nearest_errors)
-            n_inside = np.sum(ne_arr <= 0, axis=0)
-            n_outside = np.sum(ne_arr > 0, axis=0)
+            free_space = Utils.geometric_intersection((front_region,self._max_empty_region))
+            free_space = shapely.MultiPolygon([a for a in free_space if shpred.intersects(a,self.robo_bound)])
+            free_space_area  = shapely.area(free_space)
 
             ply_coords = {sid:self._sensors[sid].get_gt_segment(ranges) for sid,ranges in self._gtlidar_data.items()}
             plys = [geom.Polygon(coords) for coords in ply_coords.values()]
             gt_space = shops.unary_union(plys)
-            diff_free_space = shapely.intersection(gt_space,free_space)
-            amount_in_space = shapely.area(diff_free_space) / shapely.area(gt_space)
+            gt_space_area = shapely.area(gt_space)
+            free_in_gt_space = shapely.intersection(gt_space,free_space)
+            free_in_gt_space_area = shapely.area(free_in_gt_space)
+            #amount_in_space = free_in_gt_space_area / gt_space_area
+            self.metric_data[1] = (gt_space_area,free_space_area,free_in_gt_space_area)
 
-            self.get_logger().info(repr(amount_in_space))
-            #self.get_logger().info("NE - In: "+str(n_inside)+" Out: "+str(n_outside)+" / "+"AE - "+repr(area_errors))
+            if list(self._gt_objects.keys()):
+                nearest_errors = Utils.compute_error('nearest_object', self._gt_objects, 
+                                    points=found_front_points)
+
+                area_errors = Utils.compute_error('area_errors',self._gt_objects,ref_area=free_space)
+
+                self.metric_data[2] = nearest_errors
+                self.metric_data[3] = area_errors
+
+                ne_arr = np.array(nearest_errors)
+                n_inside = np.sum(ne_arr <= 0, axis=0)
+                n_outside = np.sum(ne_arr > 0, axis=0)
+
+                #self.get_logger().info("NE - In: "+str(n_inside)+" Out: "+str(n_outside)+" / "+"AE - "+repr(area_errors))
+                #self.get_logger().info(repr(np.mean(ne_arr)))
 
             # TODO trajectory check
 
-            self.visualize(xyp_samp,self._fusion_vidata['rois'],front,gt_space,front_region=front_region)
-        else:  
-            self.visualize(xyp_samp,self._fusion_vidata['rois'],front)
+            self.visualize(xyp_samp,self._fusion_vidata['rois'],front,gt_space,front_region=front_region,free_space=free_space)
+        else:
+            ply_coords = {sid:self._sensors[sid].get_gt_segment(ranges) for sid,ranges in self._gtlidar_data.items()}
+            plys = [geom.Polygon(coords) for coords in ply_coords.values()]
+            gt_space = shops.unary_union(plys)
+
+            self.visualize(xyp_samp,self._fusion_vidata['rois'],front,gt_space)
+        
+        # Publish metric data
+        self.metric_data[0] = self.get_clock().now().to_msg().sec + self.get_clock().now().to_msg().nanosec*1e-9
+        metric_data_repr = tuple(map(repr,self.metric_data))
+        error_msg = std_msgs.String()
+        error_msg.data = metric_data_repr[0]+';'+metric_data_repr[1]+';'+metric_data_repr[2]+';'+metric_data_repr[3]
+        self._metric_pub.publish(error_msg)
 
     def loop(self, rate: float, update_type: str):
         ros_rate = self.create_rate(rate)

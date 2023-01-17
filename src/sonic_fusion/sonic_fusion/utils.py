@@ -73,7 +73,7 @@ class Utils():
         return shapely.length(shl)
 
     @classmethod
-    def sample_front(cls, rois, sample_radius, fov, pmap, Psamp_prev, pthr: float) -> list:
+    def sample_front(cls, rois, sample_radius, fov, pmap, focal_point, Psamp_prev, max_empty_reg, pthr: float) -> list:
         nrays = max(int(abs(fov[1] - fov[0])/np.pi * 100),10)
         phis = np.linspace(*fov,nrays)
 
@@ -81,9 +81,10 @@ class Utils():
         rads = np.linspace(0.0,sample_radius,nrads)
         Ra, Ph = np.meshgrid(rads,phis)
         X_rays, Y_rays = cls.pol2cart(Ra,Ph)
+        X_rays = X_rays + focal_point
 
         if not rois:
-            return [cls.pol2cart(sample_radius,phi) for phi in phis], Psamp_prev, 0*X_rays
+            return [cls.pol2cart(sample_radius,phi) for phi in phis], Psamp_prev, 0*X_rays, []
 
         Psamp = pmap(X_rays,Y_rays) # limiting computation (as it should be..)
         Psamp_integr_parts = Psamp_prev+[Psamp]
@@ -94,13 +95,14 @@ class Utils():
         idxs = np.vstack((np.arange(idxs_nearest.shape[0]),idxs_nearest))
         front_full = list(zip(X_rays[tuple(idxs)],Y_rays[tuple(idxs)]))
         
-        # Find rays intersecting roi but where no point was found
+        # Find rays (intersecting roi but where no point was found) and throw out
         roi_limits = tuple(map(cls.find_angular_region, rois))
         cross_roi = [True if any([True if p>=rlim[0] and p<=rlim[1] else False for rlim in roi_limits]) else False for p in phis] #tuple([False for _ in range(X_rays.shape[0])])
-        fil = ~(cross_roi & not_found_filt)
+        fil = np.logical_not(np.logical_and(cross_roi, not_found_filt))
         front = list(compress(front_full,fil))
+        found_points = list(compress(front_full,np.logical_not(not_found_filt)))
 
-        return front, Psamp_integr_parts, np.vstack([X_rays.ravel(), Y_rays.ravel(), Psamp.ravel()])
+        return front, Psamp_integr_parts, np.vstack([X_rays.ravel(), Y_rays.ravel(), Psamp.ravel()]), found_points
 
     @staticmethod
     def pa_or_pb(a,b):
@@ -124,6 +126,9 @@ class Utils():
     def compute_error(err_type: str, gt_objects: dict, *, points=None, ref_area=None):
         if err_type=='nearest_object':
             assert(points != None)
+
+            if not points:
+                return []
 
             # map points to geom Point
             ray_points = list(map(geom.Point, points))
@@ -153,31 +158,32 @@ class Utils():
             raise Exception("Error Type '"+err_type+"' does not exist.")
 
     @staticmethod
-    def get_observable_region(max_empty_reg):
+    def get_observable_region(max_empty_reg,focal_point):
         bounding_circ = geom.Polygon()
 
         max_r = 20.0
         for i in range(2000):
             # Step in 1mm and find max radius TODO: use function shapely?
             radius = (i+1)/(1e2)
-            bounding_circ = geom.Point((0,0)).buffer(radius)
+            bounding_circ = geom.Point((focal_point,0)).buffer(radius)
             if shpred.contains(bounding_circ, max_empty_reg):
                 max_r = radius
                 break
 
-        ray_ccw = geom.LineString([(-0.05,0),(-max_r,0.0)])
-        ray_cw = geom.LineString([(-0.05,0),(-max_r,0.0)])
+        ray_ccw = geom.LineString([(focal_point,0),(-max_r,0.0)])
+        ray_cw = geom.LineString([(focal_point,0),(-max_r,0.0)])
         min_phi, max_phi = 0.0, 0.0
         found_min, found_max = False, False
-        for j in range(1,101):
+        ang_res = 1000
+        for j in range(1,ang_res+1):
             if shpred.intersects(ray_ccw,max_empty_reg) and not found_min:
-                min_phi = -np.pi + 2*(j-2)/100*(np.pi)
+                min_phi = -np.pi + 2*(j-2)/ang_res*(np.pi)
                 found_min = True
             if shpred.intersects(ray_cw,max_empty_reg) and not found_max:
-                max_phi = np.pi - 2*(j-2)/100*(np.pi)
+                max_phi = np.pi - 2*(j-2)/ang_res*(np.pi)
                 found_max = True
-            ray_ccw = shaffin.rotate(ray_ccw, 2*(np.pi)/100, origin=(0,0), use_radians=True) #(j-1)/20*(np.pi)
-            ray_cw = shaffin.rotate(ray_cw, -2*(np.pi)/100, origin=(0,0), use_radians=True)
+            ray_ccw = shaffin.rotate(ray_ccw, 2*(np.pi)/ang_res, origin=(focal_point,0), use_radians=True) #(j-1)/20*(np.pi)
+            ray_cw = shaffin.rotate(ray_cw, -2*(np.pi)/ang_res, origin=(focal_point,0), use_radians=True)
 
         return (max_r, min_phi, max_phi)
 

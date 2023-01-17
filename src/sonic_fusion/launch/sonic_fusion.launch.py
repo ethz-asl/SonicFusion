@@ -36,29 +36,50 @@ def get_world_object_data(world_file):
 def generate_launch_description():
     ld = LaunchDescription()
 
-    config_file = os.path.join(
-        get_package_share_directory('sonic_description'),
-        'cfg', 'sensor_cfgs.yaml')
+    hw_test = False
+    hw_conf = ('36-18-out', 'near')
+    focal_point = 0.0 # None for arbitrary config, -1.0 for INF, else [-0.8,0.8]
 
-    with open(config_file) as f:
-        sensor_cfgs_array = yaml.safe_load(f)
-    sensor_cfgs = {e['id']: e for e in sensor_cfgs_array}
+    if hw_test:
+        # For hardware tests
+        config_file = os.path.join(
+            get_package_share_directory('sonic_description'),
+            'cfg', 'sensor_cfgs_hw_'+hw_conf[0]+'.yaml')
 
-    world_file = os.path.join(get_package_share_directory(
-        'sonic_description'), 'urdf/world_circ.sdf')
+        with open(config_file) as f:
+            sensor_cfgs_array = yaml.safe_load(f)
+        sensor_cfgs = {e['id']: e for e in sensor_cfgs_array}
+        
+        gt_file = os.path.join(get_package_share_directory(
+            'sonic_description'), 'cfg/hw_gt_objects_'+hw_conf[1]+'.yaml')
 
-    gt_data = get_world_object_data(world_file)
+        gt_data = {}
+        with open(gt_file) as f:
+            gt_data = yaml.safe_load(f)
 
-    # For hardware tests
-    # config_file = os.path.join(
-    #     get_package_share_directory('sonic_description'),
-    #     'cfg', 'sensor_cfgs_hw.yaml')
+    else:
+        # Simulation test
+        if focal_point!=None:
+            if focal_point<-0.8:
+                config_name = 'sensors_cfgs_focal-INF.yaml'
+            else:
+                config_name = 'sensors_cfgs_focal'+repr(int(1000*focal_point))+'.yaml'
+        else:
+            focal_point = 0.0
+            config_name = 'sensor_cfgs.yaml'
+        
+        config_file = os.path.join(
+            get_package_share_directory('sonic_description'),
+            'cfg', config_name)
 
-    # with open(config_file) as f:
-    #     sensor_cfgs_array = yaml.safe_load(f)
-    # sensor_cfgs = {e['id']: e for e in sensor_cfgs_array}
-    # 
-    # gt_data = {}
+        with open(config_file) as f:
+            sensor_cfgs_array = yaml.safe_load(f)
+        sensor_cfgs = {e['id']: e for e in sensor_cfgs_array}
+
+        world_file = os.path.join(get_package_share_directory(
+            'sonic_description'), 'urdf/world_circ.sdf')
+
+        gt_data = get_world_object_data(world_file)
         
     node=Node(
         package = 'sonic_fusion',
@@ -67,7 +88,8 @@ def generate_launch_description():
         parameters= [
             {"sensor_cfgs": repr(sensor_cfgs)},
             {"gt_data": repr(gt_data)},
-            {"hw_test": False},
+            {"hw_test": hw_test},
+            {"focal_point": focal_point},
         ],
     )
     ld.add_action(node)
