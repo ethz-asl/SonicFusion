@@ -19,12 +19,18 @@ To run the simulation:
 
 `ros2 launch sonic_description sonic_spawn.launch.py`
 
+Or for the hardware tests adapt the sonic_fusion.launch.py (see comments) and run:
+
+`ros2 bag play [NAME OF BAG] --pause` and play when the rest is ready.
+
+---
+
 and in another terminal run:
 
 `ros2 run sonic_fusion sonic_fusion.launch.py`
 
 To visualize the results use rviz2 and the config src/sonic_description/launch/sonic.rviz
 
-The robot can be moved by running the teleop command in a separate terminal:
+The robot in simulation can be moved by running the teleop command in a separate terminal:
 
 `ros2 run teleop_twist_keyboard teleop_twist_keyboard cmd_vel:=/sonic/cmd_vel`
